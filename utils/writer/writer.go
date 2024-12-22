@@ -32,7 +32,7 @@ func writeCPMK(f *excelize.File, m *model.Model, cpl *cpl.CPL, styles map[StyleT
 	return nil
 }
 
-func merge(f *excelize.File, sheetName string, beginCol, endCol int) error {
+func mergeRow(f *excelize.File, sheetName string, beginCol, endCol int) error {
 	colNameBegin, _ := excelize.ColumnNumberToName(beginCol)
 	colNameEnd, _ := excelize.ColumnNumberToName(endCol)
 	cellBegin := fmt.Sprintf("%s%d", colNameBegin, 1)
@@ -60,19 +60,14 @@ func writeCPL(f *excelize.File, m *model.Model, styles map[StyleType]int) error 
 		f.SetCellValue(m.GetSheetName(), cell, cplItem.Name())
 
 		writeCPMK(f, m, cplItem, styles)
-		merge(f, m.GetSheetName(), cplItem.BeginCol(), cplItem.EndCol())
+		mergeRow(f, m.GetSheetName(), cplItem.BeginCol(), cplItem.EndCol())
 		ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), cell)
 
 		lastEnd = cplItem.EndCol()
 	}
 	return nil
 }
-
 func WriteSheet(f *excelize.File, m *model.Model) error {
-	_, err := f.NewSheet(m.GetSheetName())
-	if err != nil {
-		return err
-	}
 	styles, err := InitStyles(f)
 	if err != nil {
 		return err
@@ -80,9 +75,41 @@ func WriteSheet(f *excelize.File, m *model.Model) error {
 	if err := writeCPL(f, m, styles); err != nil {
 		return err
 	}
+
+	// last CPL column
+	lastCPLColumn := m.CPL()[len(m.CPL())-1].EndCol()
+	colName, err := excelize.ColumnNumberToName(lastCPLColumn + 1)
+	if err != nil {
+		return err
+	}
+
+	// Write header
+	headerCell := fmt.Sprintf("%s%d", colName, 1)
+	f.SetCellValue(m.GetSheetName(), headerCell, "Nilai mata kuliah")
+	f.MergeCell(m.GetSheetName(), headerCell, fmt.Sprintf("%s%d", colName, 3))
+	ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), headerCell)
+
+	// Process each CPL
+	for _, cpl := range m.CPL() {
+		currentColName, err := excelize.ColumnNumberToName(lastCPLColumn + 2)
+		if err != nil {
+			return err
+		}
+
+		startCell := fmt.Sprintf("%s%d", currentColName, 1)
+		endCell := fmt.Sprintf("%s%d", currentColName, cpl.Row()+2)
+		f.SetCellValue(m.GetSheetName(), startCell, fmt.Sprintf("Capaian %s", cpl.Name()))
+
+		if err := f.MergeCell(m.GetSheetName(), startCell, endCell); err != nil {
+			return err
+		}
+
+		ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), startCell)
+		lastCPLColumn++
+	}
+
 	return nil
 }
-
 func SaveToExcel(f *excelize.File) error {
 	if err := f.SaveAs("test.xlsx"); err != nil {
 		return err
