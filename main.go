@@ -14,9 +14,9 @@ func main() {
 		model1 = model.NewModel("Sheet1", 1)
 	)
 	var (
-		CPMK1 = cpl.New("CPMK1", 100, 100, 100, 100, 100)
-		CPMK2 = cpl.New("CPMK2", 100, 0, 100, 0, 100)
-		CPMK3 = cpl.New("CPMK3", 100, 0, 100, 0, 100)
+		CPMK1 = cpl.New("CPMK1", 100, 100, 100, 100, 100, 100)
+		CPMK2 = cpl.New("CPMK2", 100, 0, 100, 0, 100, 0)
+		CPMK3 = cpl.New("CPMK3", 100, 0, 100, 0, 100, 90)
 	)
 	var (
 		CPL1 = cpl.NewCPL("CPL1")

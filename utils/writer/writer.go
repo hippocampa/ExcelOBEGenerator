@@ -67,7 +67,6 @@ func writeCPL(f *excelize.File, m *model.Model, styles map[StyleType]int) error 
 	}
 	return nil
 }
-
 func WriteSheet(f *excelize.File, m *model.Model) error {
 	styles, err := InitStyles(f)
 	if err != nil {
@@ -76,33 +75,41 @@ func WriteSheet(f *excelize.File, m *model.Model) error {
 	if err := writeCPL(f, m, styles); err != nil {
 		return err
 	}
+
 	// last CPL column
 	lastCPLColumn := m.CPL()[len(m.CPL())-1].EndCol()
 	colName, err := excelize.ColumnNumberToName(lastCPLColumn + 1)
 	if err != nil {
 		return err
 	}
-	cell := fmt.Sprintf("%s%d", colName, 1)
-	f.SetCellValue(m.GetSheetName(), cell, "Nilai mata kuliah")
-	ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), cell)
 
+	// Write header
+	headerCell := fmt.Sprintf("%s%d", colName, 1)
+	f.SetCellValue(m.GetSheetName(), headerCell, "Nilai mata kuliah")
+	f.MergeCell(m.GetSheetName(), headerCell, fmt.Sprintf("%s%d", colName, 3))
+	ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), headerCell)
+
+	// Process each CPL
 	for _, cpl := range m.CPL() {
-		colName, _ := excelize.ColumnNumberToName(lastCPLColumn + 1)
-		if err := f.MergeCell(m.GetSheetName(), cell, fmt.Sprintf("%s%d", colName, cpl.Row()+2)); err != nil {
-			fmt.Printf("Error merging cells: %v\n", err)
+		currentColName, err := excelize.ColumnNumberToName(lastCPLColumn + 2)
+		if err != nil {
 			return err
 		}
-		if err := f.MergeCell(m.GetSheetName(), cell, fmt.Sprintf("%s%d", colName, cpl.Row()+2)); err != nil {
-			return err
-		}
-		ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), cell)
-		lastCPLColumn++
 
+		startCell := fmt.Sprintf("%s%d", currentColName, 1)
+		endCell := fmt.Sprintf("%s%d", currentColName, cpl.Row()+2)
+		f.SetCellValue(m.GetSheetName(), startCell, fmt.Sprintf("Capaian %s", cpl.Name()))
+
+		if err := f.MergeCell(m.GetSheetName(), startCell, endCell); err != nil {
+			return err
+		}
+
+		ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), startCell)
+		lastCPLColumn++
 	}
 
 	return nil
 }
-
 func SaveToExcel(f *excelize.File) error {
 	if err := f.SaveAs("test.xlsx"); err != nil {
 		return err
