@@ -16,7 +16,6 @@ func writeCPMK(f *excelize.File, m *model.Model, cpl *cpl.CPL, styles map[StyleT
 			if v != 0 {
 				cpl.SetEndCol(colCounter)
 				colName, _ := excelize.ColumnNumberToName(cpl.EndCol())
-				fmt.Println(colName)
 				keyLoc := fmt.Sprintf("%s%d", colName, 2)
 				f.SetCellValue(m.GetSheetName(), keyLoc, k)
 				ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), keyLoc)
@@ -27,7 +26,6 @@ func writeCPMK(f *excelize.File, m *model.Model, cpl *cpl.CPL, styles map[StyleT
 			}
 		}
 		cpl.CPMK()[i].SetEndCol(colCounter - 1)
-		fmt.Printf("BeginCol: %d, EndCol: %d\n", cpl.CPMK()[i].BeginCol, cpl.CPMK()[i].EndCol)
 
 	}
 	cpl.SetEndCol(colCounter - 1)
@@ -39,7 +37,6 @@ func merge(f *excelize.File, sheetName string, beginCol, endCol int) error {
 	colNameEnd, _ := excelize.ColumnNumberToName(endCol)
 	cellBegin := fmt.Sprintf("%s%d", colNameBegin, 1)
 	cellEnd := fmt.Sprintf("%s%d", colNameEnd, 1)
-	fmt.Println(cellBegin, cellEnd)
 	if err := f.MergeCell(sheetName, cellBegin, cellEnd); err != nil {
 		return err
 
@@ -67,7 +64,6 @@ func writeCPL(f *excelize.File, m *model.Model, styles map[StyleType]int) error 
 		ApplyStyle(f, styles, StyleBorder, m.GetSheetName(), cell)
 
 		lastEnd = cplItem.EndCol()
-		fmt.Printf("CPL:BeginCol: %d, EndCol: %d\n", cplItem.BeginCol(), cplItem.EndCol())
 	}
 	return nil
 }
@@ -89,7 +85,6 @@ func WriteSheet(f *excelize.File, m *model.Model) error {
 
 func SaveToExcel(f *excelize.File) error {
 	if err := f.SaveAs("test.xlsx"); err != nil {
-		fmt.Println(err)
 		return err
 	}
 	return nil
